@@ -1,11 +1,11 @@
---  Active: 1661208283003@@127.0.0.1@3306@analise_risco
+-- Active: 1661208283003@@127.0.0.1@3306@analise_risco
 --  Arquivo SQL com os scripts utilizados para tratar os dados no banco.
 
 --  Tradução de colunas e normalização dos dados da tabela ID identificada como tabela de FATOS.
 --  Foi identificado que o tipo de dado que estava como TEXTO deveria ir para VARCHAR(16).
 --  Permitindo assim a Chave Estrangeira com outras tabelas.
 
-ALTER TABLE id 
+ALTER TABLE ids 
     CHANGE COLUMN person_id pessoa_id VARCHAR(16) NOT NULL 
     ,CHANGE COLUMN loan_id emprestimo_id VARCHAR(16) NOT NULL
     ,CHANGE COLUMN cb_id hst_id VARCHAR(16) NOT NULL
@@ -85,6 +85,11 @@ FROM dados_mutuarios GROUP BY pessoa_id HAVING COUNT(pessoa_id) > 1;
 DELETE FROM dados_mutuarios WHERE pessoa_id = "";
 
 
+SELECT pessoa_id, emprestimo_id, hst_id, COUNT(*)  
+FROM ids GROUP BY pessoa_id HAVING COUNT(pessoa_id) > 1;
+
+DELETE FROM ids WHERE pessoa_id = "";
+
 --  CHAVES PRIMARIAS
 --  Chave Primaria da tabela Pessoas.
 ALTER TABLE dados_mutuarios ADD CONSTRAINT PK_Pessoa PRIMARY KEY (pessoa_id);
@@ -94,10 +99,36 @@ ALTER Table emprestimos ADD CONSTRAINT PK_Emprestimos PRIMARY KEY (emprestimo_id
 ALTER TABLE historicos_banco ADD CONSTRAINT PK_historicos PRIMARY KEY (hst_id);
 
 
+
+--Não Funcionando - Veririicar porque do dados estar incomativel.
 --  CHAVE ESTRANGEIRAS 
 --  Chave Estrangeira entre Fato e Cadastro.
-ALTER TABLE id ADD FOREIGN KEY (pessoa_id) REFERENCES dados_mutuarios(pessoa_id);
+ALTER TABLE ids ADD FOREIGN KEY (pessoa_id) REFERENCES dados_mutuarios(pessoa_id);
 --  Chave Estrangeira entre Fato e Cadastro.
 ALTER TABLE ID ADD FOREIGN KEY (emprestimo_id) REFERENCES emprestimos(emprestimo_id);
 --  Chave Estrangeira entre Fato e Historico.
 ALTER TABLE ID ADD FOREIGN KEY (hst_id) REFERENCES historicos_banco(hst_id);
+
+CREATE TABLE dados_modelo_ml AS SELECT 
+
+dm.pessoa_id,
+dm.pessoa_idade,
+dm.salario_ano,
+dm.propriedade_sit,
+dm.ano_trabalhado,
+e.motivo_emprestimo,
+e.pontuacao_emprestimos,
+e.vl_total,
+e.tx_juros,
+e.inadimplencia,
+e.tx_renda_divida,
+hb.hst_inadimplencia,
+hb.hst_primeiro_credito
+
+FROM ids i
+
+JOIN dados_mutuarios dm ON dm.pessoa_id = i.pessoa_id 
+
+JOIN emprestimos e ON e.emprestimo_id = i.emprestimo_id 
+
+JOIN historicos_banco hb on hb.hst_id = i.hst_id
