@@ -24,7 +24,7 @@ import sys
 from collections import Counter
 from sklearn.datasets import make_classification
 
-from imblearn.under_sampling import ClusterCentroids, RandomUnderSampler
+from imblearn.under_sampling import ClusterCentroids, RandomUnderSampler, NearMiss
 
 # Obtendo dados.
 # Analise_RISCO
@@ -83,69 +83,71 @@ def treinando_modelo(classificador):
 
     y = base_dados['inadimplencia']
     x = base_dados.drop(columns=['inadimplencia'])
+    # --------------------------------------------------------------------
     
-    # Balanceamento das Variaveis
+    # Balanceamento das Variaveis.
+    
     # cc = ClusterCentroids(random_state=0)
+    # rus = RandomUnderSampler(random_state=0)
     
-    rus = RandomUnderSampler(random_state=0, replacement=True)
+    nm = NearMiss(version=1, n_neighbors_ver3=3)
     
-    x_resampled, y_resampled = rus.fit_resample(x, y)
+    x_resampled, y_resampled = nm.fit_resample(x, y)
     
-    print(sorted(Counter(y).items()))
+    print(sorted(Counter(y_resampled).items()))
     # --------------------------------------------------------------------
 
-    # separando a base de treino e teste
-    #standardScaler = StandardScaler()
+    # Separando a base de treino e teste.
 
     SEED = 80
     # Treino Teste Split
     raw_treino_x, raw_teste_x, treino_y, teste_y = train_test_split(
-        x, y, test_size=0.30, random_state=SEED)
+        x_resampled, y_resampled, test_size=0.30, random_state=SEED)
+    # --------------------------------------------------------------------
 
-    # Treino Teste Split com StratifiedShuffleSplit
-    # validador = StratifiedShuffleSplit(
-    #     n_splits=1, test_size=0.30, random_state=SEED).split(x_resampled, y_resampled)
-    # for treino_index, teste_index in validador:
-    #     raw_treino_x = x_resampled.loc[treino_index]
-    #     raw_teste_x = x_resampled.loc[teste_index]
-    #     treino_y = y_resampled.loc[treino_index]
-    #     teste_y = y_resampled.loc[teste_index]
-
+    # Normalizando os dados.
+    
     scaler = StandardScaler()
     scaler.fit(raw_treino_x)
     treino_x = scaler.transform(raw_treino_x)
     teste_x = scaler.transform(raw_teste_x)
+    # --------------------------------------------------------------------
+    
+    # Plotagem.
     
     base_treino = treino_x.shape[0]
     base_teste = teste_x.shape[0]
     print('A base de treino tem %s elementos e a base de teste tem %s elementos.' % (base_treino, base_teste))
     print(100*'-')
-
-    # ajustando modelo com base de teste
+    # --------------------------------------------------------------------
+    
+    # Fit do Modelo.
 
     modelo = classificador
     modelo.fit(treino_x, treino_y)
 
     # --------------------------------------------------------------------
 
-    # matriz de confusao
-
+    # Matriz de Confusão.
+    
     matriz_confusao = ConfusionMatrixDisplay.from_estimator(
         modelo, teste_x, teste_y, cmap='Blues')
     plt.title('Matriz de Confusao')
     matriz = matriz_confusao.figure_
-    plt.show
-
-    # classification report
+    # plt.show
+    # --------------------------------------------------------------------
+    
+    # Classification Report.
 
     previsoes = modelo.predict(teste_x)
 
     print('\nClassification Report:')
     print(classification_report(teste_y, previsoes))
-
-    # curva ROC  e AUC
-
     print(100*'-')
+    # --------------------------------------------------------------------
+    
+    # Curva ROC e AUC.
+
     prob_previsao = modelo.predict_proba(teste_x)[:, 1]
 
     tfp, tvp, limite = roc_curve(teste_y, prob_previsao)
@@ -166,15 +168,15 @@ def treinando_modelo(classificador):
     plt.show()
     
     
-    pdf = matplotlib.backends.backend_pdf.PdfPages("output_" + datetime.now().strftime(
-        "%d_%m_%H_%M_%S") + ".pdf")
+    pdf = matplotlib.backends.backend_pdf
+
+    pdf = pdf.PdfPages("output_" + datetime.now().strftime("%d_%m_%H_%M_%S") + ".pdf")
     
     report = classification_report(teste_y, previsoes, output_dict=True)
     report_map = sns.heatmap(pd.DataFrame(report).iloc[:-1, :].T, annot=True)
     report_fig = report_map.figure
-    
-    # pdf.draw_text('Relatório de Classificação')
-    # pdf.draw_text(prob_previsao)
+
+
     pdf.savefig(report_fig)
     pdf.savefig(matriz)
     pdf.savefig(fig1)
@@ -183,5 +185,3 @@ def treinando_modelo(classificador):
     # previsao = modelo.predict(base_predicao)
     
     return modelo, matriz_confusao
-
-
