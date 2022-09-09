@@ -20,6 +20,14 @@
       * Tradução de linhas
       * Inclusão de chaves primarias e estrangeiras.
       
+# Etapa 2
+
+   No arquivo Notebook.ipynb estão os tratamentos dos dados nulos e das variaveis sejam categoricas ou numericas, nos markdowns existem comentários sobre tais analises.
+   
+   Já o arquivo projeto.py é possivel encontrar as funções que capturam o dataset tratado pelo notebook e executa o modelo gerando uma saida pdf na pasta raiz com as métricas de classificação.
+   
+   Atualmente o projeto se encontra na adptação dos modelos para as avaliações necessárias conforme escopo, seja aumentar clientela ou reduzir risco de inadimplencia.
+      
 # Observações Gerais sobre o repositório.
 
   O repositório ja esta com o venv e suas dependencias - faltante arquivo requirements *apenas no final do projeto.
