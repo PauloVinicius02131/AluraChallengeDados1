@@ -24,7 +24,7 @@ import sys
 from collections import Counter
 from sklearn.datasets import make_classification
 
-from imblearn.under_sampling import ClusterCentroids
+from imblearn.under_sampling import ClusterCentroids, RandomUnderSampler
 
 # Obtendo dados.
 # Analise_RISCO
@@ -85,15 +85,13 @@ def treinando_modelo(classificador):
     x = base_dados.drop(columns=['inadimplencia'])
     
     # Balanceamento das Variaveis
-
+    # cc = ClusterCentroids(random_state=0)
     
+    rus = RandomUnderSampler(random_state=0, replacement=True)
+    
+    x_resampled, y_resampled = rus.fit_resample(x, y)
     
     print(sorted(Counter(y).items()))
-    cc = ClusterCentroids(random_state=0)
-    
-    x_resampled, y_resampled = cc.fit_resample(x, y)
-    
-    # predicao = base_predicao.drop(columns=['inadimplencia'])
     # --------------------------------------------------------------------
 
     # separando a base de treino e teste
