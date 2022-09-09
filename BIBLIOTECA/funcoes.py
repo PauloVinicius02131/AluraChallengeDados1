@@ -49,9 +49,9 @@ def leitura_csv(csv):
 
 def leitura_csv_predicao(csv_predicao):
     global base_predicao
-    base_predicao = pd.read_csv(csv_predicao)
-    base_predicao = base_predicao.drop(
-        columns=['pessoa_id', 'pessoa_idade', 'salario_ano', 'vl_total','inadimplencia'])
+    # base_predicao = pd.read_csv(csv_predicao)
+    # base_predicao = base_predicao.drop(
+    #     columns=['pessoa_id', 'pessoa_idade', 'salario_ano', 'vl_total','inadimplencia'])
     return base_predicao
 
 def modelando_dados():
@@ -79,13 +79,14 @@ def info_dados():
     
 def treinando_modelo(classificador):
 
-    # separando a base de modelagem e variavel resposta
+    # Separando a Base  e variavel resposta.
 
     y = base_dados['inadimplencia']
     x = base_dados.drop(columns=['inadimplencia'])
     
     # Balanceamento das Variaveis
-    x , y = make_classification(n_samples=1000, n_features=2, n_redundant=0, n_informative=2)
+
+    
     
     print(sorted(Counter(y).items()))
     cc = ClusterCentroids(random_state=0)
