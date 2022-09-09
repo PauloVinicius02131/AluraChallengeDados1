@@ -21,6 +21,10 @@ import time
 import os
 import sys
 
+from collections import Counter
+from sklearn.datasets import make_classification
+
+from imblearn.under_sampling import ClusterCentroids
 
 # Obtendo dados.
 # Analise_RISCO
@@ -38,7 +42,6 @@ def leitura_banco(select):
     dados = pd.read_sql(select, cnx)
     return dados
 
-
 def leitura_csv(csv):
     global dados
     dados = pd.read_csv(csv)
@@ -48,14 +51,13 @@ def leitura_csv_predicao(csv_predicao):
     global base_predicao
     base_predicao = pd.read_csv(csv_predicao)
     base_predicao = base_predicao.drop(
-        columns=['pessoa_id', 'pessoa_idade', 'salario_ano', 'vl_total', 'Unnamed: 0','inadimplencia'])
-    
+        columns=['pessoa_id', 'pessoa_idade', 'salario_ano', 'vl_total','inadimplencia'])
     return base_predicao
 
 def modelando_dados():
     global base_dados
     base_dados = dados.drop(
-        columns=['pessoa_id', 'pessoa_idade', 'salario_ano', 'vl_total','Unnamed: 0'])
+        columns=['pessoa_id', 'pessoa_idade', 'salario_ano', 'vl_total'])
     return base_dados
 
 
@@ -82,6 +84,14 @@ def treinando_modelo(classificador):
     y = base_dados['inadimplencia']
     x = base_dados.drop(columns=['inadimplencia'])
     
+    # Balanceamento das Variaveis
+    x , y = make_classification(n_samples=1000, n_features=2, n_redundant=0, n_informative=2)
+    
+    print(sorted(Counter(y).items()))
+    cc = ClusterCentroids(random_state=0)
+    
+    x_resampled, y_resampled = cc.fit_resample(x, y)
+    
     # predicao = base_predicao.drop(columns=['inadimplencia'])
     # --------------------------------------------------------------------
 
@@ -90,18 +100,18 @@ def treinando_modelo(classificador):
 
     SEED = 80
     # Treino Teste Split
-    # raw_treino_x, raw_teste_x, treino_y, teste_y = train_test_split(
-    #     x, y, test_size=0.30, random_state=SEED)
+    raw_treino_x, raw_teste_x, treino_y, teste_y = train_test_split(
+        x, y, test_size=0.30, random_state=SEED)
 
     # Treino Teste Split com StratifiedShuffleSplit
-    validador = StratifiedShuffleSplit( n_splits=1, test_size=0.30, random_state=SEED).split(x, y)
-    for treino_index, teste_index in validador:
-        raw_treino_x = x.loc[treino_index]
-        raw_teste_x = x.loc[teste_index]
-        treino_y = y.loc[treino_index]
-        teste_y = y.loc[teste_index]
-    
-    
+    # validador = StratifiedShuffleSplit(
+    #     n_splits=1, test_size=0.30, random_state=SEED).split(x_resampled, y_resampled)
+    # for treino_index, teste_index in validador:
+    #     raw_treino_x = x_resampled.loc[treino_index]
+    #     raw_teste_x = x_resampled.loc[teste_index]
+    #     treino_y = y_resampled.loc[treino_index]
+    #     teste_y = y_resampled.loc[teste_index]
+
     scaler = StandardScaler()
     scaler.fit(raw_treino_x)
     treino_x = scaler.transform(raw_treino_x)
@@ -156,6 +166,7 @@ def treinando_modelo(classificador):
     plt.xlabel('Especificidade')
     plt.show()
     
+    
     pdf = matplotlib.backends.backend_pdf.PdfPages("output_" + datetime.now().strftime(
         "%d_%m_%H_%M_%S") + ".pdf")
     
@@ -163,13 +174,14 @@ def treinando_modelo(classificador):
     report_map = sns.heatmap(pd.DataFrame(report).iloc[:-1, :].T, annot=True)
     report_fig = report_map.figure
     
-
+    # pdf.draw_text('Relatório de Classificação')
+    # pdf.draw_text(prob_previsao)
     pdf.savefig(report_fig)
     pdf.savefig(matriz)
     pdf.savefig(fig1)
     pdf.close()
     # --------------------------------------------------------------------
-    previsao = modelo.predict(base_predicao)
+    # previsao = modelo.predict(base_predicao)
     
     return modelo, matriz_confusao
 
