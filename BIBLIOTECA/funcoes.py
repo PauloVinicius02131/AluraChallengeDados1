@@ -11,7 +11,7 @@ from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 from sklearn.metrics import classification_report
 from sklearn.metrics import roc_curve, roc_auc_score
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, StratifiedShuffleSplit
 from sklearn.preprocessing import StandardScaler
 
 from datetime import date, datetime
@@ -44,6 +44,13 @@ def leitura_csv(csv):
     dados = pd.read_csv(csv)
     return dados
 
+def leitura_csv_predicao(csv_predicao):
+    global base_predicao
+    base_predicao = pd.read_csv(csv_predicao)
+    base_predicao = base_predicao.drop(
+        columns=['pessoa_id', 'pessoa_idade', 'salario_ano', 'vl_total', 'Unnamed: 0','inadimplencia'])
+    
+    return base_predicao
 
 def modelando_dados():
     global base_dados
@@ -75,15 +82,26 @@ def treinando_modelo(classificador):
     y = base_dados['inadimplencia']
     x = base_dados.drop(columns=['inadimplencia'])
     
+    # predicao = base_predicao.drop(columns=['inadimplencia'])
     # --------------------------------------------------------------------
 
     # separando a base de treino e teste
     #standardScaler = StandardScaler()
 
-    SEED = 70
-    raw_treino_x, raw_teste_x, treino_y, teste_y = train_test_split(
-        x, y, test_size=0.30, random_state=SEED)
+    SEED = 80
+    # Treino Teste Split
+    # raw_treino_x, raw_teste_x, treino_y, teste_y = train_test_split(
+    #     x, y, test_size=0.30, random_state=SEED)
 
+    # Treino Teste Split com StratifiedShuffleSplit
+    validador = StratifiedShuffleSplit( n_splits=1, test_size=0.30, random_state=SEED).split(x, y)
+    for treino_index, teste_index in validador:
+        raw_treino_x = x.loc[treino_index]
+        raw_teste_x = x.loc[teste_index]
+        treino_y = y.loc[treino_index]
+        teste_y = y.loc[teste_index]
+    
+    
     scaler = StandardScaler()
     scaler.fit(raw_treino_x)
     treino_x = scaler.transform(raw_treino_x)
@@ -151,5 +169,8 @@ def treinando_modelo(classificador):
     pdf.savefig(fig1)
     pdf.close()
     # --------------------------------------------------------------------
-
+    previsao = modelo.predict(base_predicao)
+    
     return modelo, matriz_confusao
+
+
