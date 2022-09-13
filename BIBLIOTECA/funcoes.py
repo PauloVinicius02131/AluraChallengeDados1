@@ -1,6 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.backends.backend_pdf
+
 import seaborn as sns
 import sqlalchemy as sql
 
@@ -42,10 +43,12 @@ def leitura_banco(select):
     dados = pd.read_sql(select, cnx)
     return dados
 
+
 def leitura_csv(csv):
     global dados
     dados = pd.read_csv(csv)
     return dados
+
 
 def leitura_csv_predicao(csv_predicao):
     global base_predicao
@@ -53,6 +56,7 @@ def leitura_csv_predicao(csv_predicao):
     # base_predicao = base_predicao.drop(
     #     columns=['pessoa_id', 'pessoa_idade', 'salario_ano', 'vl_total','inadimplencia'])
     return base_predicao
+
 
 def modelando_dados():
     global base_dados
@@ -75,8 +79,8 @@ def info_dados():
     print('Dados nulos:')
     print(base_dados)
     print('-'*100)
-    
-    
+
+
 def treinando_modelo(classificador):
 
     # Separando a Base  e variavel resposta.
@@ -84,16 +88,15 @@ def treinando_modelo(classificador):
     y = base_dados['inadimplencia']
     x = base_dados.drop(columns=['inadimplencia'])
     # --------------------------------------------------------------------
-    
-    # Balanceamento das Variaveis.
-    
+
+    # Balanceamento das Variaveis alvo.
+
     # cc = ClusterCentroids(random_state=0)
     # rus = RandomUnderSampler(random_state=0)
-    
+
     nm = NearMiss(version=1, n_neighbors_ver3=3)
-    
     x_resampled, y_resampled = nm.fit_resample(x, y)
-    
+
     print(sorted(Counter(y_resampled).items()))
     # --------------------------------------------------------------------
 
@@ -106,21 +109,22 @@ def treinando_modelo(classificador):
     # --------------------------------------------------------------------
 
     # Normalizando os dados.
-    
+
     scaler = StandardScaler()
     scaler.fit(raw_treino_x)
     treino_x = scaler.transform(raw_treino_x)
     teste_x = scaler.transform(raw_teste_x)
     # --------------------------------------------------------------------
-    
-    # Plotagem.
-    
+
+    # Plotagem Treino e Teste.
+
     base_treino = treino_x.shape[0]
     base_teste = teste_x.shape[0]
-    print('A base de treino tem %s elementos e a base de teste tem %s elementos.' % (base_treino, base_teste))
+    print('A base de treino tem %s elementos e a base de teste tem %s elementos.' % (
+        base_treino, base_teste))
     print(100*'-')
     # --------------------------------------------------------------------
-    
+
     # Fit do Modelo.
 
     modelo = classificador
@@ -129,14 +133,14 @@ def treinando_modelo(classificador):
     # --------------------------------------------------------------------
 
     # Matriz de Confusão.
-    
+
     matriz_confusao = ConfusionMatrixDisplay.from_estimator(
         modelo, teste_x, teste_y, cmap='Blues')
     plt.title('Matriz de Confusao')
     matriz = matriz_confusao.figure_
     # plt.show
     # --------------------------------------------------------------------
-    
+
     # Classification Report.
 
     previsoes = modelo.predict(teste_x)
@@ -145,7 +149,7 @@ def treinando_modelo(classificador):
     print(classification_report(teste_y, previsoes))
     print(100*'-')
     # --------------------------------------------------------------------
-    
+
     # Curva ROC e AUC.
 
     prob_previsao = modelo.predict_proba(teste_x)[:, 1]
@@ -153,29 +157,23 @@ def treinando_modelo(classificador):
     tfp, tvp, limite = roc_curve(teste_y, prob_previsao)
     print('roc_auc:', roc_auc_score(teste_y, prob_previsao))
 
-    # plt.subplots(1, figsize=(5, 5))
-    # plt.title('Curva ROC')
     fig1 = plt.figure()
-    plt.plot(tfp, tvp)    
-    # plotando linha pontilhada guia para regressao aleatoria
+    plt.plot(tfp, tvp)
     plt.plot([0, 1], ls="--", c='red')
-    # plotando linha pontilhada guia para regressao perfeita
     plt.plot([0, 0], [1, 0], ls="--",
              c='green'), plt.plot([1, 1], ls="--", c='green')
-    
     plt.ylabel('Sensibilidade')
     plt.xlabel('Especificidade')
     plt.show()
-    
-    
+
     pdf = matplotlib.backends.backend_pdf
 
-    pdf = pdf.PdfPages("output_" + datetime.now().strftime("%d_%m_%H_%M_%S") + ".pdf")
-    
+    pdf = pdf.PdfFile(
+        "output_" + datetime.now().strftime("%d_%m_%H_%M_%S") + ".pdf")
+
     report = classification_report(teste_y, previsoes, output_dict=True)
     report_map = sns.heatmap(pd.DataFrame(report).iloc[:-1, :].T, annot=True)
     report_fig = report_map.figure
-
 
     pdf.savefig(report_fig)
     pdf.savefig(matriz)
@@ -183,5 +181,5 @@ def treinando_modelo(classificador):
     pdf.close()
     # --------------------------------------------------------------------
     # previsao = modelo.predict(base_predicao)
-    
+
     return modelo, matriz_confusao
