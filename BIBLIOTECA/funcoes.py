@@ -1,185 +1,111 @@
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.backends.backend_pdf
-
 import seaborn as sns
-import sqlalchemy as sql
 
-from sqlalchemy import create_engine
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
 
-from sklearn.metrics import accuracy_score
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
-from sklearn.metrics import classification_report
-from sklearn.metrics import roc_curve, roc_auc_score
-from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import train_test_split, StratifiedShuffleSplit
+from sklearn.pipeline import Pipeline
+
+from sklearn.model_selection import GroupKFold
+from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import cross_validate
+from sklearn.model_selection import train_test_split
+
+
 from sklearn.preprocessing import StandardScaler
 
-from datetime import date, datetime
-from datetime import timedelta
-import time
+from imblearn.over_sampling import SMOTE
 
-import os
-import sys
+from sklearn.metrics import classification_report
+from sklearn.metrics import roc_curve
+from sklearn.metrics import roc_auc_score
+from sklearn.metrics import ConfusionMatrixDisplay
+from sklearn.metrics import recall_score
 
-from collections import Counter
-from sklearn.datasets import make_classification
-
-from imblearn.under_sampling import ClusterCentroids, RandomUnderSampler, NearMiss
-
-# Obtendo dados.
-# Analise_RISCO
-string_connection = 'mysql+mysqlconnector://{user}:{password}@{server}/{database}'.format(
-                    user='root',
-                    password='125478',
-                    server='127.0.0.1',
-                    database='analise_risco')
-
-cnx = sql.create_engine(string_connection)
-
-
-def leitura_banco(select):
-    global dados
-    dados = pd.read_sql(select, cnx)
-    return dados
+SEED = 80
+np.random.seed(SEED)
 
 
 def leitura_csv(csv):
-    global dados
-    dados = pd.read_csv(csv)
-    return dados
-
-
-def leitura_csv_predicao(csv_predicao):
-    global base_predicao
-    # base_predicao = pd.read_csv(csv_predicao)
-    # base_predicao = base_predicao.drop(
-    #     columns=['pessoa_id', 'pessoa_idade', 'salario_ano', 'vl_total','inadimplencia'])
-    return base_predicao
-
-
-def modelando_dados():
     global base_dados
-    base_dados = dados.drop(
+    base_dados = pd.read_csv(csv).drop(
         columns=['pessoa_id', 'pessoa_idade', 'salario_ano', 'vl_total'])
     return base_dados
 
-
-def info_dados():
-    linhas = base_dados.shape[0]
-    colunas = base_dados.shape[1]
-    print('\nO numero de linhas é %s linhas e %s colunas\n' % (linhas, colunas))
-    print('Cabeçalho dos Dados:')
-    print(base_dados.info())
-    print('-'*100)
-    print('\n Descrição dos dados:')
-    print(base_dados.describe())
-    print('-'*100)
-    nulos = base_dados.isnull().sum()
-    print('Dados nulos:')
-    print(base_dados)
-    print('-'*100)
-
-
 def treinando_modelo(classificador):
-
-    # Separando a Base  e variavel resposta.
-
     y = base_dados['inadimplencia']
     x = base_dados.drop(columns=['inadimplencia'])
-    # --------------------------------------------------------------------
 
-    # Balanceamento das Variaveis alvo.
+    print('A Basse possui: %s elementos.' % (x.shape[0].__format__(',d')))
+    print('-'*100)
 
-    # cc = ClusterCentroids(random_state=0)
-    # rus = RandomUnderSampler(random_state=0)
-
-    nm = NearMiss(version=1, n_neighbors_ver3=3)
-    x_resampled, y_resampled = nm.fit_resample(x, y)
-
-    print(sorted(Counter(y_resampled).items()))
-    # --------------------------------------------------------------------
-
-    # Separando a base de treino e teste.
-
-    SEED = 80
-    # Treino Teste Split
-    raw_treino_x, raw_teste_x, treino_y, teste_y = train_test_split(
-        x_resampled, y_resampled, test_size=0.30, random_state=SEED)
-    # --------------------------------------------------------------------
-
-    # Normalizando os dados.
-
+    #Normalizando os Dados.
     scaler = StandardScaler()
-    scaler.fit(raw_treino_x)
-    treino_x = scaler.transform(raw_treino_x)
-    teste_x = scaler.transform(raw_teste_x)
-    # --------------------------------------------------------------------
+    scaler.fit(x)
+    x = scaler.transform(x)
 
-    # Plotagem Treino e Teste.
+    # Balanceamento da Base de Dados.
+    resampler = SMOTE(random_state=SEED)
+    resampler_name = resampler.__getattribute__('__class__').__name__
+    x_resampled, y_resampled = resampler.fit_resample(x, y)
 
+    print('A Basse foi balanceada com: %s' % (resampler_name))
+    print('*'*36)
+
+    # Separação Treino e Teste.
+    treino_x, teste_x, treino_y, teste_y = train_test_split(
+        x_resampled, y_resampled, test_size=0.30, random_state=0)
     base_treino = treino_x.shape[0]
     base_teste = teste_x.shape[0]
-    print('A base de treino tem %s elementos e a base de teste tem %s elementos.' % (
-        base_treino, base_teste))
-    print(100*'-')
-    # --------------------------------------------------------------------
 
-    # Fit do Modelo.
+    print('Separada com: %s elementos de treino e %s elementos para teste.' % (
+        base_treino.__format__(',d'), base_teste.__format__(',d')))
+    print('-'*100)
 
-    modelo = classificador
-    modelo.fit(treino_x, treino_y)
 
-    # --------------------------------------------------------------------
+    scaler = StandardScaler()
+    modelo = GradientBoostingClassifier(loss='log_loss', max_depth=8, max_features='sqrt',
+                                        random_state=80, subsample=0.5)
 
-    # Matriz de Confusão.
+    pipeline = Pipeline([('scaler', scaler), ('estimador', modelo)])
+
+    print('Definição do Pipeline')
+    print('-'*100)
+    print(pipeline.named_steps['scaler'])
+    print('*'*16)
+    print(pipeline.named_steps['estimador'])
+    print('-'*100)
+
+    pipeline.fit(treino_x, treino_y)
+
+    predicao = pipeline.predict(teste_x)
+
+    print('Classification Report')
+    print('.'*53)
+    print(classification_report(teste_y, predicao))
+    print('.'*53)
+
 
     matriz_confusao = ConfusionMatrixDisplay.from_estimator(
-        modelo, teste_x, teste_y, cmap='Blues')
+        pipeline, teste_x, teste_y, cmap='Blues')
     plt.title('Matriz de Confusao')
-    matriz = matriz_confusao.figure_
-    # plt.show
-    # --------------------------------------------------------------------
 
-    # Classification Report.
+    prob_previsao = pipeline.predict_proba(teste_x)[:, 1]
 
-    previsoes = modelo.predict(teste_x)
-
-    print('\nClassification Report:')
-    print(classification_report(teste_y, previsoes))
-    print(100*'-')
-    # --------------------------------------------------------------------
-
-    # Curva ROC e AUC.
-
-    prob_previsao = modelo.predict_proba(teste_x)[:, 1]
 
     tfp, tvp, limite = roc_curve(teste_y, prob_previsao)
-    print('roc_auc:', roc_auc_score(teste_y, prob_previsao))
 
-    fig1 = plt.figure()
+    plt.figure(figsize=(6, 6))
     plt.plot(tfp, tvp)
     plt.plot([0, 1], ls="--", c='red')
     plt.plot([0, 0], [1, 0], ls="--",
-             c='green'), plt.plot([1, 1], ls="--", c='green')
+            c='green'), plt.plot([1, 1], ls="--", c='green')
     plt.ylabel('Sensibilidade')
     plt.xlabel('Especificidade')
     plt.show()
-
-    pdf = matplotlib.backends.backend_pdf
-
-    pdf = pdf.PdfFile(
-        "output_" + datetime.now().strftime("%d_%m_%H_%M_%S") + ".pdf")
-
-    report = classification_report(teste_y, previsoes, output_dict=True)
-    report_map = sns.heatmap(pd.DataFrame(report).iloc[:-1, :].T, annot=True)
-    report_fig = report_map.figure
-
-    pdf.savefig(report_fig)
-    pdf.savefig(matriz)
-    pdf.savefig(fig1)
-    pdf.close()
-    # --------------------------------------------------------------------
-    # previsao = modelo.predict(base_predicao)
+    print('roc_auc:', roc_auc_score(teste_y, prob_previsao))
 
     return modelo, matriz_confusao
