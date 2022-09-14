@@ -2,6 +2,9 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+import sqlalchemy as sql
+import pickle 
+from sqlalchemy import create_engine
 
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.tree import DecisionTreeClassifier
@@ -25,87 +28,64 @@ from sklearn.metrics import roc_auc_score
 from sklearn.metrics import ConfusionMatrixDisplay
 from sklearn.metrics import recall_score
 
+from sklearn.compose import make_column_transformer
+from sklearn.preprocessing import OneHotEncoder
+
 SEED = 80
 np.random.seed(SEED)
 
 
-def leitura_csv(csv):
-    global base_dados
-    base_dados = pd.read_csv(csv).drop(
-        columns=['pessoa_id', 'pessoa_idade', 'salario_ano', 'vl_total'])
-    return base_dados
+def criar_faixas(df_predicao):
+    global df_faixas
+    faixa_etaria = [15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85]
+    faixa_etaria_labels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
 
-def treinando_modelo(classificador):
-    y = base_dados['inadimplencia']
-    x = base_dados.drop(columns=['inadimplencia'])
+    df_predicao['faixa_idade'] = pd.cut(
+        x=df_predicao['pessoa_idade'], bins=faixa_etaria, labels=faixa_etaria_labels)
 
-    print('A Basse possui: %s elementos.' % (x.shape[0].__format__(',d')))
-    print('-'*100)
+    faixa_salario = [4000, 28872, 35004, 42016, 49000,
+                     55004, 63096, 73004, 85757, 110004, 150004]
+    faixa_salario_labes = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
-    #Normalizando os Dados.
-    scaler = StandardScaler()
-    scaler.fit(x)
-    x = scaler.transform(x)
+    df_predicao['Faixa_Salarial'] = pd.cut(
+        x=df_predicao['salario_ano'], bins=faixa_salario, labels=faixa_salario_labes)
 
-    # Balanceamento da Base de Dados.
-    resampler = SMOTE(random_state=SEED)
-    resampler_name = resampler.__getattribute__('__class__').__name__
-    x_resampled, y_resampled = resampler.fit_resample(x, y)
+    faixa_emprestimo = [1475, 2450, 3450, 4425, 5425, 6400, 7400, 8375, 9350, 10325, 11325, 12325, 13300, 14300, 15275, 16250, 17250,
+                        18225, 19200, 20200, 21200, 22100, 23100, 24150, 25000, 26000, 27050, 28000, 29000, 30000, 31050, 32000, 33000, 34000, 35000]
 
-    print('A Basse foi balanceada com: %s' % (resampler_name))
-    print('*'*36)
+    faixa_emprestimo_labels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+                               16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34]
 
-    # Separação Treino e Teste.
-    treino_x, teste_x, treino_y, teste_y = train_test_split(
-        x_resampled, y_resampled, test_size=0.30, random_state=0)
-    base_treino = treino_x.shape[0]
-    base_teste = teste_x.shape[0]
+    df_predicao['Faixa_Emprestimo'] = pd.cut(
+        x=df_predicao['vl_total'], bins=faixa_emprestimo, labels=faixa_emprestimo_labels)
 
-    print('Separada com: %s elementos de treino e %s elementos para teste.' % (
-        base_treino.__format__(',d'), base_teste.__format__(',d')))
-    print('-'*100)
+    df_faixas = df_predicao.copy()
 
+    return df_predicao, df_faixas
+    
 
-    scaler = StandardScaler()
-    modelo = GradientBoostingClassifier(loss='log_loss', max_depth=8, max_features='sqrt',
-                                        random_state=80, subsample=0.5)
+    
+#Carregando Dados de predição:
+# df_predicao = pd.read_csv('Data/Predicao.csv', sep=';')
 
-    pipeline = Pipeline([('scaler', scaler), ('estimador', modelo)])
+# print('O Data Frame de Previsão foi lido :')
+# print(df_predicao.head())
 
-    print('Definição do Pipeline')
-    print('-'*100)
-    print(pipeline.named_steps['scaler'])
-    print('*'*16)
-    print(pipeline.named_steps['estimador'])
-    print('-'*100)
+# #inicio da modelagem predicao.
+# print('-'*100)
 
-    pipeline.fit(treino_x, treino_y)
+# #Carregar Encoder.
 
-    predicao = pipeline.predict(teste_x)
+# with open('MODELO/one_hot_enc.pkl', 'rb') as f:
+#     one_hot_enc = pickle.load(f)
 
-    print('Classification Report')
-    print('.'*53)
-    print(classification_report(teste_y, predicao))
-    print('.'*53)
+# df_predicao = one_hot_enc.transform(df_predicao)
+# df_predicao = pd.DataFrame(df_predicao, columns=one_hot_enc.get_feature_names())
 
+# print(df_predicao.head())
 
-    matriz_confusao = ConfusionMatrixDisplay.from_estimator(
-        pipeline, teste_x, teste_y, cmap='Blues')
-    plt.title('Matriz de Confusao')
+# criar_faixas(df_predicao=df_predicao)
 
-    prob_previsao = pipeline.predict_proba(teste_x)[:, 1]
+# print('As faixas foram criadas com sucesso.')
+# print(df_predicao.head())
 
-
-    tfp, tvp, limite = roc_curve(teste_y, prob_previsao)
-
-    plt.figure(figsize=(6, 6))
-    plt.plot(tfp, tvp)
-    plt.plot([0, 1], ls="--", c='red')
-    plt.plot([0, 0], [1, 0], ls="--",
-            c='green'), plt.plot([1, 1], ls="--", c='green')
-    plt.ylabel('Sensibilidade')
-    plt.xlabel('Especificidade')
-    plt.show()
-    print('roc_auc:', roc_auc_score(teste_y, prob_previsao))
-
-    return modelo, matriz_confusao

@@ -8,5 +8,5 @@ csv_predicao = 'Data/Predicao.csv'
 
 fc.leitura_csv(csv)
 
-fc.treinando_modelo(GradientBoostingClassifier(n_estimators = 60, learning_rate = 1.0, max_depth = 13, random_state = 0))
-
+fc.treinando_modelo(GradientBoostingClassifier(
+    n_estimators=60, learning_rate=1.0, max_depth=13, random_state=0))
