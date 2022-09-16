@@ -62,30 +62,3 @@ def criar_faixas(df_predicao):
     df_faixas = df_predicao.copy()
 
     return df_predicao, df_faixas
-    
-
-    
-#Carregando Dados de predição:
-# df_predicao = pd.read_csv('Data/Predicao.csv', sep=';')
-
-# print('O Data Frame de Previsão foi lido :')
-# print(df_predicao.head())
-
-# #inicio da modelagem predicao.
-# print('-'*100)
-
-# #Carregar Encoder.
-
-# with open('MODELO/one_hot_enc.pkl', 'rb') as f:
-#     one_hot_enc = pickle.load(f)
-
-# df_predicao = one_hot_enc.transform(df_predicao)
-# df_predicao = pd.DataFrame(df_predicao, columns=one_hot_enc.get_feature_names())
-
-# print(df_predicao.head())
-
-# criar_faixas(df_predicao=df_predicao)
-
-# print('As faixas foram criadas com sucesso.')
-# print(df_predicao.head())
-
