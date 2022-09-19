@@ -1,4 +1,15 @@
-# AluraChallengeDados1 - Alura Cash 
+d
+<h1 align="center"> AluraChallengeDados1 - Alura Cash  </h1>
+
+<div align="center">
+<img src="https://img.shields.io/badge/MySQL-005C84?style=for-the-badge&logo=mysql&logoColor=white"><img>
+<img src="https://img.shields.io/badge/Python-14354C?style=for-the-badge&logo=python&logoColor=yellow"> </img>
+<img src="https://img.shields.io/badge/scikit_learn-F7931E?style=for-the-badge&logo=scikit-learn&logoColor=white"></img>
+<img src="https://img.shields.io/badge/fastapi-109989?style=for-the-badge&logo=FASTAPI&logoColor=white"> </img>
+<img src="https://img.shields.io/badge/PowerBI-F2C811?style=for-the-badge&logo=Power%20BI&logoColor=black"> </img>
+</div>
+
+
   Neste projeto a Alura nos desafia a encontrar a probabilidade de inadimplência quando um determinado cliente solicitar um empréstimo. Para isso, utilizamos o dataset da Alura Cash que ja vem com algumas variáveis pré-processadas e com a variável alvo "inadimplente" que indica se o cliente pagou ou não o empréstimo.
 
   
@@ -38,7 +49,14 @@
 
 # Etapa 3
       
-      Em construção.
+  Após a otimização do modelo, foi necessário realizar a hospedagem do modelo em uma API, para isso foi utilizado o framework FastAPI. O qual deve ser iniciado através do arquivo Main.py.
 
+  Para a requisição na API foi utilizado diretamente os parâmetros de consulta do PowerBi, que realizam uma consulta local através do endereço: 127.0.0.1 e porta 8000. ( Caso a API esteja rodando em outro endereço, deve ser alterado no arquivo de consulta do PowerBi.)
+
+  O arquivo de PowerBi é construído em cima de 3 consultas básicas, sendo elas:
+   
+    1- Montar requisição na API.
+    2- Retorno da previsão e probabilidades.
+    3- Consulta dos dados em que o modelo foi treinado.
   
 #alurachallengedados1
