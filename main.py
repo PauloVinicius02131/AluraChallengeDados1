@@ -1,82 +1,82 @@
+#Arquivo que sobe o serviço de API e Funcoes de Dados.
 
-# uvicorn main:app --reload
+# uvicorn FastApi:app --reload
 # uvicorn main:app --reload --host 0.0.0.0
 
 import pandas as pd
-import pickle as pkl
+import numpy as np
+import pickle as pk
 
 from fastapi import FastAPI
 
-from BIBLIOTECA.funcoes import criar_faixas
+
+from BIBLIOTECA.funcoes import criar_faixa_idade, criar_faixa_valor
+
+#-----------------#
 
 app = FastAPI()
 
 with open('MODELO/one_hot_enc.pkl', 'rb') as f:
-    one_hot_enc = pkl.load(f)
+    one_hot_enc = pk.load(f)
     
 with open('MODELO/scaler.pkl', 'rb') as f:
-    scaler = pkl.load(f)
+    scaler = pk.load(f)
     
 with open('MODELO/modelo.pkl', 'rb') as f:
-    modelo = pkl.load(f)
+    modelo = pk.load(f)
 
 @app.get("/")
 def hello_root():
-    return {"message": "Hello World"}
+    return {"Root": "Você está na raiz da API"}
 
 
-@app.get("/montardicionario/")
-def montar_dicionario(teste_pessoa_id: str, 
-                      teste_pessoa_idade: int,
-                      teste_salario_ano: int,
-                      teste_propriedade_sit: str,
-                      teste_ano_trabalhado: int,
-                      teste_motivo_emprestimo: str,
-                      teste_pontuacao_emprestimos: str,
-                      teste_vl_total: int,
-                      teste_tx_juros: int,
-                      teste_hst_inadimplencia: int,
-                      teste_hst_primeiro_credito: int):
-    global variaveis
+#127.0.0.1:8000/requisicao/idade=30&salario=5000&propriedade=Alugada&ano_trabalhado=5&motivo_emprestimo=Melhoria do Lar&pontuacao=G&vl_total=10000&juros=8.8&hst_inadimplencia=0&hst_primeiro_credito=2
+@app.get('/requisicao/idade={var_pessoa_idade}&salario={var_salario_ano}&propriedade={var_propriedade_sit}&ano_trabalhado={var_ano_trabalhado}&motivo_emprestimo={var_motivo_emprestimo}&pontuacao={var_pontuacao_emprestimos}&vl_total={var_vl_total}&juros={var_tx_juros}&hst_inadimplencia={var_hst_inadimplencia}&hst_primeiro_credito={var_hst_primeiro_credito}')
+def montar_requisicao(var_pessoa_idade: int,
+                      var_salario_ano: int,
+                      var_propriedade_sit: str,
+                      var_ano_trabalhado: int,
+                      var_motivo_emprestimo: str,
+                      var_pontuacao_emprestimos: str,
+                      var_vl_total: int,
+                      var_tx_juros: float,
+                      var_hst_inadimplencia: int,
+                      var_hst_primeiro_credito: int):
+    global variaveis, dados
+
+    variaveis = {"pessoa_idade": [var_pessoa_idade],
+                 "salario_ano": [var_salario_ano],
+                 "propriedade_sit": [var_propriedade_sit],
+                 "ano_trabalhado": [var_ano_trabalhado],
+                 "motivo_emprestimo": [var_motivo_emprestimo],
+                 "pontuacao_emprestimos": [var_pontuacao_emprestimos],
+                 "vl_total": [var_vl_total],
+                 "tx_juros": [var_tx_juros],
+                 "hst_inadimplencia": [var_hst_inadimplencia],
+                 "hst_primeiro_credito": [var_hst_primeiro_credito]}
     
-    variaveis = {"pessoa_id": [teste_pessoa_id],
-                       "pessoa_idade": [teste_pessoa_idade],
-                       "salario_ano": [teste_salario_ano],
-                       "propriedade_sit": [teste_propriedade_sit],
-                       "ano_trabalhado": [teste_ano_trabalhado],
-                       "motivo_emprestimo": [teste_motivo_emprestimo],
-                       "pontuacao_emprestimos": [teste_pontuacao_emprestimos],
-                       "vl_total": [teste_vl_total],
-                       "tx_juros": [teste_tx_juros],
-                       "inadimplencia": [0],
-                       "hst_inadimplencia" :[teste_hst_inadimplencia],
-                       "hst_primeiro_credito": [teste_hst_primeiro_credito]}
+    dados = pd.DataFrame(variaveis, index=[0])
     
-    print(variaveis)
+    print(dados)
     return variaveis
 
-#http://127.0.0.1:8000/montardicionario/?teste_pessoa_id="abc"&teste_pessoa_idade=27&teste_salario_ano=128000&teste_propriedade_sit="Hipotecada"&teste_ano_trabalhado=7&teste_motivo_emprestimo="Pagamento de dÃ©bitos"&teste_pontuacao_emprestimos="A"&teste_vl_total=6000&teste_tx_juros=8&teste_hst_inadimplencia=0&teste_hst_primeiro_credito=4
 
-#http://127.0.0.1:8000/montardicionario/?teste_pessoa_id="abc"&teste_pessoa_idade=26&teste_salario_ano=69996&teste_propriedade_sit="Hipotecada"&teste_ano_trabalhado=5&teste_motivo_emprestimo="Pagamento de dÃ©bitos"&teste_pontuacao_emprestimos="A"&teste_vl_total=8500&teste_tx_juros=9&teste_hst_inadimplencia=0&teste_hst_primeiro_credito=4
-
-
-@app.get("/testeretorno")
-def teste_retorno():
+@app.get("/previsao")
+def previsao():
     global x
-    df_predicao = pd.DataFrame(variaveis, index=[0])
-    print(df_predicao.head())
-    df_predicao = one_hot_enc.transform(df_predicao)
-    print('Apos One Hot')
-    print(df_predicao)
-    df_predicao = pd.DataFrame(
-        df_predicao, columns=one_hot_enc.get_feature_names())
-    criar_faixas(df_predicao=df_predicao)
-    data_predicao = df_predicao.drop(
-        columns=['pessoa_id', 'pessoa_idade', 'salario_ano', 'vl_total'])
-    x = data_predicao.drop(columns=['inadimplencia'])
-    x = scaler.transform(x)
+    
+    criar_faixa_idade(dados)
+    
+    criar_faixa_valor(dados)
+    
+    df_predicao = one_hot_enc.transform(dados)
+    df_predicao = pd.DataFrame(df_predicao, columns=one_hot_enc.get_feature_names_out())
+
+    x = scaler.transform(df_predicao)
+    
     previsao = modelo.predict(x)
-    return {"previsao": previsao[0]}
+    
+    return  {"previsao": previsao[0]}
 
 
 @app.get("/testeimg")
@@ -84,35 +84,3 @@ def teste_retorno():
     teste = modelo.decision_function(x)
     print(teste)
     return {'ok'}
-
-# http://127.0.0.1:8000/modelo/?teste_pessoa_id="abc"&teste_pessoa_idade=26&teste_salario_ano=69996&teste_propriedade_sit="Hipotecada"&teste_ano_trabalhado=5&teste_motivo_emprestimo="Pagamento de dÃ©bitos"&teste_pontuacao_emprestimos="A"&teste_vl_total=8500&teste_tx_juros=9&teste_hst_inadimplencia=0&teste_hst_primeiro_credito=4
-
-
-@app.get('/modelo/teste_pessoa_id={teste_pessoa_id}&teste_pessoa_idade={teste_pessoa_idade}&teste_salario_ano={teste_salario_ano}&teste_propriedade_sit={teste_propriedade_sit}&teste_ano_trabalhado={teste_ano_trabalhado}&teste_motivo_emprestimo={teste_motivo_emprestimo}&teste_pontuacao_emprestimos={teste_pontuacao_emprestimos}&teste_vl_total={teste_vl_total}&teste_tx_juros={teste_tx_juros}&teste_hst_inadimplencia={teste_hst_inadimplencia}&teste_hst_primeiro_credito={teste_hst_primeiro_credito}')
-def montar_dicionario(teste_pessoa_id: str,
-                      teste_pessoa_idade: int,
-                      teste_salario_ano: int,
-                      teste_propriedade_sit: str,
-                      teste_ano_trabalhado: int,
-                      teste_motivo_emprestimo: str,
-                      teste_pontuacao_emprestimos: str,
-                      teste_vl_total: int,
-                      teste_tx_juros: int,
-                      teste_hst_inadimplencia: int,
-                      teste_hst_primeiro_credito: int):
-    global variaveis
-
-    variaveis = {"pessoa_id": [teste_pessoa_id],
-                 "pessoa_idade": [teste_pessoa_idade],
-                 "salario_ano": [teste_salario_ano],
-                 "propriedade_sit": [teste_propriedade_sit],
-                 "ano_trabalhado": [teste_ano_trabalhado],
-                 "motivo_emprestimo": [teste_motivo_emprestimo],
-                 "pontuacao_emprestimos": [teste_pontuacao_emprestimos],
-                 "vl_total": [teste_vl_total],
-                 "tx_juros": [teste_tx_juros],
-                 "inadimplencia": [0],
-                 "hst_inadimplencia": [teste_hst_inadimplencia],
-                 "hst_primeiro_credito": [teste_hst_primeiro_credito]}
-
-    return variaveis

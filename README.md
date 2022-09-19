@@ -1,38 +1,44 @@
 # AluraChallengeDados1 - Alura Cash 
-  Neste projeto a Alura nos desafiará a encontrar um indicador de Taxa de Probabilidade de Inadimplencia utilizando de regressão logistica em um bd disponibilizado.
+  Neste projeto a Alura nos desafia a encontrar a probabilidade de inadimplência quando um determinado cliente solicitar um empréstimo. Para isso, utilizamos o dataset da Alura Cash que ja vem com algumas variáveis pré-processadas e com a variável alvo "inadimplente" que indica se o cliente pagou ou não o empréstimo.
+
   
-  São 3 etapas propostas separadas por semana em que cada uma respectivamente corresponde aos seguintes objetivos: 
+  São 3 etapas propostas separadas por semanas com graus de dificuldade crescentes em que cada uma respectivamente corresponde aos seguintes objetivos: 
     
-    1- Obtenção do BD via arquivo DUMP, incluindo estes dados em um banco e realizar tratamentos basicos via sql. 
+    1- Restaurar BD Alura Cash.
     
-    2- Construção do Modelo de Aprendizado de Maquina. (Regressão logistica com sklearn) 
+    2- Construção  e validação do Modelo de Aprendizado de Maquina.
     
-    3- Exibição de resultados via PowerBI.
+    3- Hospedar Modelo em API. Criar requisição para API e apresentar resultado na ferramenta PowerBI.
 
 
 # Etapa 1
-   Este repositório ja se encontra com as interações realizadas no banco, o arquivo que realiza este tratamento esta no diretório raiz nomeado como ETL_BANCO.sql
+  Nesta etapa, foi necessário realizar a importação do arquivo DUMP para o banco de dados MySQL.
+    
+    Após a importação, foi necessário realizar o tratamento dos dados, realizando tradução no nome das colunas e variaveis assim como modelar uma tabela única para ser lida pelo modelo.
 
-   Ali você pode encontrar nos comentários basicamente 4 processos:
+   Na pasta DATA/DUMP_BD_MySQL, encontra-se o arquivo DUMP do banco de dados e  também o script BD.sql que foi utilizado para os tratamentos dos dados.
    
       * Alteração do tipo de dados nas colunas para melhor desempenho.
       * Tradução de nome de colunas
       * Tradução de linhas
       * Inclusão de chaves primarias e estrangeiras.
+      * Criação de tabela única para leitura do modelo.
       
 # Etapa 2
 
-   No arquivo Notebook.ipynb estão os tratamentos dos dados nulos e das variaveis sejam categoricas ou numericas, nos markdowns existem comentários sobre tais analises.
-   
-   Já o arquivo projeto.py é possivel encontrar as funções que capturam o dataset tratado pelo notebook e executa o modelo gerando uma saida pdf na pasta raiz com as métricas de classificação.
-   
-   Atualmente o projeto se encontra na adptação dos modelos para as avaliações necessárias conforme escopo, seja aumentar clientela ou reduzir risco de inadimplencia.
-      
-# Observações Gerais sobre o repositório.
+  Nesta etapa, foi necessário realizar a construção do modelo de aprendizado de maquina, o modelo escolhido foi o GradientBoostingClassifier, que é um modelo de aprendizado de maquina supervisionado que utiliza o algoritmo de boosting para melhorar a performance do modelo.
+  
+  Para isso, foi necessário realizar a leitura do banco de dados, realizar a limpeza dos dados, realizar a transformação dos dados e por fim, realizar a construção do modelo.
+  
+  No arquivo Projeto_V1.ipynb, encontra-se o código utilizado para a construção do modelo assim como o tratamento do dado.
 
-  O repositório ja esta com o venv e suas dependencias - faltante arquivo requirements *apenas no final do projeto.
-  
-  Notebook Jupyter esta para realizar testes e analises nos dados.
-  
+  No processo de validação do modelo consta descrito no arquivo ValidarModelos.ipynb, foram testados outros 3 modelos com métodos de Over e Under Sampling e a utilização de GridSearchCV para encontrar os melhores parâmetros para o modelo escolhido.
+
+  Ao final de cada processo foi utilizada a biblioteca Pickle para exportar o modelo serializado para o arquivo modelo.pkl que será utilizado na API. ( Assim como os transformadores de dados.)
+
+# Etapa 3
+      
+      Em construção.
+
   
 #alurachallengedados1
