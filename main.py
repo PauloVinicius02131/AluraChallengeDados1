@@ -66,17 +66,19 @@ def previsao():
     global x
     
     criar_faixa_idade(dados)
-    
     criar_faixa_valor(dados)
-    
+
     df_predicao = one_hot_enc.transform(dados)
     df_predicao = pd.DataFrame(df_predicao, columns=one_hot_enc.get_feature_names_out())
 
     x = scaler.transform(df_predicao)
     
+    print(x)
     previsao = modelo.predict(x)
     
-    return  {"previsao": previsao[0]}
+    return  {"previsao": previsao[0],
+             'probability_0': modelo.predict_proba(x).tolist()[0][0],
+             'probability_1': modelo.predict_proba(x).tolist()[0][1]}
 
 
 @app.get("/testeimg")
