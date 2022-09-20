@@ -73,7 +73,6 @@ def previsao():
 
     x = scaler.transform(df_predicao)
     
-    print(x)
     previsao = modelo.predict(x)
     
     return  {"previsao": previsao[0],

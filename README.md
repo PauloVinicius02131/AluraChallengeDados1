@@ -9,6 +9,8 @@ d
 <img src="https://img.shields.io/badge/PowerBI-F2C811?style=for-the-badge&logo=Power%20BI&logoColor=black"> </img>
 </div>
 
+<br>
+<br>
 
   Neste projeto a Alura nos desafia a encontrar a probabilidade de inadimplência quando um determinado cliente solicitar um empréstimo. Para isso, utilizamos o dataset da Alura Cash que ja vem com algumas variáveis pré-processadas e com a variável alvo "inadimplente" que indica se o cliente pagou ou não o empréstimo.
 
@@ -54,9 +56,14 @@ d
   Para a requisição na API foi utilizado diretamente os parâmetros de consulta do PowerBi, que realizam uma consulta local através do endereço: 127.0.0.1 e porta 8000. ( Caso a API esteja rodando em outro endereço, deve ser alterado no arquivo de consulta do PowerBi.)
 
   O arquivo de PowerBi é construído em cima de 3 consultas básicas, sendo elas:
-   
+
     1- Montar requisição na API.
     2- Retorno da previsão e probabilidades.
     3- Consulta dos dados em que o modelo foi treinado.
   
+* Notei que a ferramenta PowerBi talvez não seja a ferramenta de visualização mais adequada para este modelo de consulta.
+
+    ja que a alteração destes parâmetros que fazem o request na API não é possível ser realizada pelo usuário final no modo de exibição leitura, para contornar esse problema, na pasta DASHBOARD existe um arquivo template, e sempre que abrir-lo serão solicitados os parâmetros da consulta. 
+
+
 #alurachallengedados1
