@@ -89,10 +89,14 @@
 
   * Após a divisão ao meio da tela os dados deixam de ser conforme o retorno da API e sim conforme os dados do banco de dados. Pois assim é possível identificar também algumas analises entre o grupo de pessoas que ja foram inadimplentes em solicitações anteriores, sendo base para o "atendente" realizar uma análise de risco.
 
+  <img src="DASHBOARDS/Gif_Filtro.gif">
+  
+ <br>
   Existe um ícone de filtro que permite alterar os dados exibidos conforme a idade desta solicitação ou a pontuação do cliente. Foi utilizado grupos de calculo no tabular editor para esta funcionalidade.
 
-  <img src="DASHBOARDS/Gif_Filtro.gif">
+
 
 <br>
 
+<br>
 #alurachallengedados1
