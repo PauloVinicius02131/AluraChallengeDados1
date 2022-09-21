@@ -70,7 +70,7 @@
 
 # Dashboard PowerBI
 
-<img src="DASHBOARDS/Dash.png">
+<img src="DASHBOARDS/Dash.PNG">
 </img>
 
   O Dashboard parte da premissa de um atendente da Alura Cash que recebe uma solicitação de empréstimo e precisa realizar uma análise de risco para aprovar ou não o empréstimo.
