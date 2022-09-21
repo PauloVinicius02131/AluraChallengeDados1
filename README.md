@@ -8,11 +8,12 @@
 <img src="https://img.shields.io/badge/PowerBI-F2C811?style=for-the-badge&logo=Power%20BI&logoColor=black"> </img>
 </div>
 
+<br>
 <div align="center" >
 <img src="DASHBOARDS/AtualizarRequisição.gif" width="300" height="200">
 </img>
 </div>
-
+<br>
 
   Neste projeto a Alura nos desafia a encontrar a probabilidade de inadimplência quando um determinado cliente solicitar um empréstimo. Para isso, utilizamos o dataset da Alura Cash que ja vem com algumas variáveis pré-processadas e com a variável alvo "inadimplente" que indica se o cliente pagou ou não o empréstimo.
 
@@ -53,7 +54,7 @@
 
 # Etapa 3
       
-  Após a otimização do modelo, foi necessário realizar a hospedagem do modelo em uma API, para isso foi utilizado o framework FastAPI. O qual deve ser iniciado através do arquivo Main.py.
+  Após a otimização do modelo, foi necessário realizar a hospedagem em uma API e para isso foi utilizado o framework FastAPI. O qual deve ser iniciado através do arquivo Main.py.
 
   Para a requisição na API foi utilizado diretamente os parâmetros de consulta do PowerBi, que realizam uma consulta local através do endereço: 127.0.0.1 e porta 8000. ( Caso a API esteja rodando em outro endereço, deve ser alterado no arquivo de consulta do PowerBi.)
 
@@ -67,5 +68,31 @@
 
     ja que a alteração destes parâmetros que fazem o request na API não é possível ser realizada pelo usuário final no modo de exibição leitura, para contornar esse problema, na pasta DASHBOARD existe um arquivo template, e sempre que abrir-lo serão solicitados os parâmetros da consulta. 
 
+# Dashboard PowerBI
+
+<img src="DASHBOARDS/Dash.png">
+</img>
+
+  O Dashboard parte da premissa de um atendente da Alura Cash que recebe uma solicitação de empréstimo e precisa realizar uma análise de risco para aprovar ou não o empréstimo.
+
+<div display="flex">
+
+<img src="DASHBOARDS/AtualizarRequisição.gif"> 
+  </img> 
+
+  <div display="inline-block">
+  Para tal é necessário editar os parâmetros no PowerBi e clicar em atualizar dados, importante ressaltar que após a alteração dos parâmetros é necessário clicar em atualizar dados para que a consulta seja realizada na API. ( não apenas aplicar a alteração no dialogo de popup)
+
+  Isso se faz necessário pois existe uma consulta de requisição e outra de retorno.
+  </div>
+</div>
+
+  * Após a divisão ao meio da tela os dados deixam de ser conforme o retorno da API e sim conforme os dados do banco de dados. Pois assim é possível identificar também algumas analises entre o grupo de pessoas que ja foram inadimplentes em solicitações anteriores, sendo base para o "atendente" realizar uma análise de risco.
+
+  Existe um ícone de filtro que permite alterar os dados exibidos conforme a idade desta solicitação ou a pontuação do cliente. Foi utilizado grupos de calculo no tabular editor para esta funcionalidade.
+
+  <img src="DASHBOARDS/Gif_Filtro.gif">
+
+<br>
 
 #alurachallengedados1
