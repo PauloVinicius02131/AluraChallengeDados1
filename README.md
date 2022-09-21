@@ -9,7 +9,7 @@
 </div>
 
 <div align="center" >
-<img src="DASHBOARDS/AtualizarRequisição.gif">
+<img src="DASHBOARDS/AtualizarRequisição.gif" width="300" height="200">
 </img>
 </div>
 
